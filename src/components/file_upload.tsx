@@ -1,10 +1,10 @@
 import OpenAI from "openai";
 import Papa from 'papaparse';
 import { PDFParse } from 'pdf-parse';
-import { useCallback, useState } from "react";
-import { useDropzone } from "react-dropzone";
+import { useState } from "react";
 import { DataTable } from "./data_table";
 import { columns } from "./table_colums";
+import { DropZone } from "./ui/dropzone";
 
 
 PDFParse.setWorker('https://cdn.jsdelivr.net/npm/pdfjs-dist@5.4.296/build/pdf.worker.min.mjs');
@@ -180,55 +180,24 @@ export const FileUpload = () => {
         }
     }
 
-    const onDrop = useCallback((acceptedFiles: File[]) => {
-        if (acceptedFiles.length > 0) {
-            processFile(acceptedFiles[0]);
-        }
-    }, []);
-
-    const { getRootProps, getInputProps, isDragActive } = useDropzone({
-        onDrop,
-        accept: {
-            'application/pdf': ['.pdf'],
-            'text/csv': ['.csv']
-        },
-        multiple: false,
-    });
-
     return (
         <div style={{ padding: '20px' }}>
             <h2 className="text-2xl pb-4">Upload Bank Statement</h2>
 
-            <div
-                {...getRootProps()}
-                style={{
-                    border: `2px dashed ${isDragActive ? '#0066cc' : '#ccc'}`,
-                    borderRadius: '8px',
-                    padding: '40px',
-                    textAlign: 'center',
-                    backgroundColor: isDragActive ? '#f0f8ff' : '#fafafa',
-                    cursor: 'pointer',
-                    marginBottom: '20px',
-                    transition: 'all 0.2s ease'
+            <DropZone
+                onDrop={(acceptedFiles) => {
+                    if (acceptedFiles.length > 0) {
+                        processFile(acceptedFiles[0]);
+                    }
                 }}
-            >
-                <input {...getInputProps()} />
-                {isDragActive ? (
-                    <p style={{ fontSize: '18px', color: '#0066cc' }}>📂 Drop your file here...</p>
-                ) : (
-                    <>
-                        <p style={{ fontSize: '18px', marginBottom: '10px' }}>
-                            📄 Drag and drop your bank statement here
-                        </p>
-                        <p style={{ color: '#666', fontSize: '14px', marginBottom: '10px' }}>
-                            or click to browse
-                        </p>
-                        <p style={{ color: '#999', fontSize: '12px' }}>
-                            Supports CSV (recommended) and PDF files
-                        </p>
-                    </>
-                )}
-            </div>
+                accept={{
+                    'application/pdf': ['.pdf'],
+                    'text/csv': ['.csv']
+                }}
+                multiple={false}
+                description="Drag and drop your bank statement here"
+                acceptedFormats="Supports CSV (recommended) and PDF files"
+            />
 
             {loading && (
                 <div style={{ textAlign: 'center', padding: '20px' }}>

@@ -3,6 +3,7 @@ import { generateClient } from "aws-amplify/data";
 import { useEffect, useState } from "react";
 import type { Schema } from "../amplify/data/resource";
 import { FileUpload } from './components/file_upload';
+import { ThemeToggle } from './components/ui/theme_toggle';
 
 const client = generateClient<Schema>();
 
@@ -31,7 +32,10 @@ function App() {
         borderBottom: '2px solid #eee',
         paddingBottom: '20px'
       }}>
-        <h1 style={{ margin: 0 }}>💰 Bank Statement Analyzer</h1>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+          <h1 style={{ margin: 0 }}>💰 Bank Statement Analyzer</h1>
+          <ThemeToggle />
+        </div>
         <div>
           <span style={{ marginRight: '15px', color: '#666' }}>
             {user?.signInDetails?.loginId}
