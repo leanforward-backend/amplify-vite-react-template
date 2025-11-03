@@ -1,4 +1,5 @@
 import { Button } from "@/components/ui/button";
+import { Input } from "@aws-amplify/ui-react";
 import { Loader2, SparklesIcon } from "lucide-react";
 import OpenAI from "openai";
 import { useState } from "react";
@@ -19,6 +20,8 @@ export const AiFileSummary = ({ transactions, fileName }: AiFileSummaryProps) =>
     const [summary, setSummary] = useState<string>("");
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    const [followUpQuestion, setFollowUpQuestion] = useState("");
+    const [dataForAI, setDataForAI] = useState<any>(null);
 
     const generateSummary = async () => {
         setLoading(true);
@@ -28,7 +31,7 @@ export const AiFileSummary = ({ transactions, fileName }: AiFileSummaryProps) =>
         try {
             const openai = new OpenAI({
                 apiKey: import.meta.env.VITE_OPENAI_API_KEY,
-                dangerouslyAllowBrowser: true // Only for development!
+                dangerouslyAllowBrowser: true
             });
 
             const totalIncome = transactions
@@ -53,7 +56,7 @@ export const AiFileSummary = ({ transactions, fileName }: AiFileSummaryProps) =>
                     return acc;
                 }, {} as Record<string, { count: number; total: number }>);
 
-            const dataForAI = {
+            const data = {
                 fileName,
                 totalTransactions: transactions.length,
                 totalIncome,
@@ -70,8 +73,10 @@ export const AiFileSummary = ({ transactions, fileName }: AiFileSummaryProps) =>
                 sampleTransactions: transactions.slice(0, 20)
             };
 
+            setDataForAI(data);
+
             const stream = await openai.chat.completions.create({
-                model: "gpt-4o-mini",
+                model: "gpt-4.1-nano",
                 messages: [
                     {
                         role: "system",
@@ -83,16 +88,18 @@ export const AiFileSummary = ({ transactions, fileName }: AiFileSummaryProps) =>
                         role: "user",
                         content: `Please analyze this bank statement data and provide a comprehensive summary:
 
-${JSON.stringify(dataForAI, null, 2)}
+                    ${JSON.stringify(data, null, 2)}
+                        
+                    Provide a summary that includes:
+                    1. Overview of financial activity (date range, transaction count)
+                    2. Income vs Expenses breakdown
+                    3. Net balance
+                    4. Top spending categories
+                    5. Notable patterns or insights
+                    6. Any reccuring payments or subscriptions, and how much is spent on them each month
+                    7. Any recommendations for financial health
 
-Provide a summary that includes:
-1. Overview of financial activity (date range, transaction count)
-2. Income vs Expenses breakdown
-3. Top spending categories
-4. Notable patterns or insights
-5. Any recommendations for financial health
-
-Format the response in a readable way with clear sections.`
+                    Format the response in a readable way with clear sections.`
                     }
                 ],
                 max_tokens: 1000,
@@ -117,6 +124,65 @@ Format the response in a readable way with clear sections.`
             const errorMessage = err instanceof Error ? err.message : 'Failed to generate summary';
             setError(errorMessage);
             console.error('OpenAI Error:', err);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleFollowUpQuestion = async (e: React.FormEvent) => {
+        e.preventDefault();
+
+        if (!followUpQuestion.trim() || !dataForAI) return;
+
+        const question = followUpQuestion;
+        setFollowUpQuestion("");
+        setLoading(true);
+
+        setSummary(prev => prev + `\n\n---\n\n**You:** ${question}\n\n**AI:** `);
+
+        try {
+            const openai = new OpenAI({
+                apiKey: import.meta.env.VITE_OPENAI_API_KEY,
+                dangerouslyAllowBrowser: true
+            });
+
+            const fullContext = {
+                ...dataForAI,
+                allTransactions: transactions
+            }
+
+            const stream = await openai.chat.completions.create({
+                model: "gpt-4.1-nano",
+                messages: [
+                    {
+                        role: "system",
+                        content: `You are a financial analyst assistant. Here is the bank statement data you previously analyzed: ${JSON.stringify(fullContext, null, 2)}`
+                    },
+                    {
+                        role: "user",
+                        content: question
+                    }
+                ],
+                max_tokens: 500,
+                temperature: 0.7,
+                stream: true
+            });
+
+            let response = '';
+            for await (const chunk of stream) {
+                const content = chunk.choices[0]?.delta?.content || '';
+                if (content) {
+                    response += content;
+                    setSummary(prev => {
+                        const lastAIIndex = prev.lastIndexOf('**AI:** ');
+                        return prev.substring(0, lastAIIndex + 8) + response;
+                    });
+                }
+            }
+
+        } catch (err) {
+            const errorMessage = err instanceof Error ? err.message : 'Failed to get response';
+            setError(errorMessage);
         } finally {
             setLoading(false);
         }
@@ -148,14 +214,28 @@ Format the response in a readable way with clear sections.`
             )}
 
             {summary && (
-                <div className="p-6 bg-gradient-to-br from-blue-50 to-purple-50 dark:from-gray-800 dark:to-gray-900 rounded-lg border border-gray-200 dark:border-gray-700 shadow-sm">
+                <div className="p-6 rounded-lg border border-gray-200 shadow-sm">
                     <h3 className="text-xl font-semibold mb-4 flex items-center">
-                        <SparklesIcon className="mr-2 h-5 w-5 text-purple-600" />
+                        <SparklesIcon className="mr-2 h-5 w-5 text-blue-600" />
                         AI Financial Summary
                     </h3>
-                    <div className="prose dark:prose-invert max-w-none whitespace-pre-wrap">
+                    <div className="whitespace-pre-wrap">
                         {summary}
                     </div>
+                    {!loading && (
+                        <form onSubmit={handleFollowUpQuestion} className="mt-4 flex gap-2">
+                            <Input
+                                className="flex-1 rounded-md"
+                                type="text"
+                                placeholder="Ask follow up questions..."
+                                value={followUpQuestion}
+                                onChange={(e) => setFollowUpQuestion(e.target.value)}
+                            />
+                            <Button type="submit" disabled={!followUpQuestion.trim()}>
+                                Ask
+                            </Button>
+                        </form>
+                    )}
                 </div>
             )}
         </div>
