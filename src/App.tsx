@@ -2,6 +2,8 @@ import { useAuthenticator } from '@aws-amplify/ui-react';
 import { generateClient } from "aws-amplify/data";
 import { useEffect, useState } from "react";
 import type { Schema } from "../amplify/data/resource";
+import { FileUpload } from './components/file_upload';
+import { ThemeToggle } from './components/ui/theme_toggle';
 
 const client = generateClient<Schema>();
 
@@ -21,22 +23,40 @@ function App() {
   }
 
   return (
-    <main>
-      <h1>{user?.signInDetails?.loginId}'s todos</h1>
-      <button onClick={createTodo}>+ new</button>
-      <ul>
-        {todos.map((todo) => (
-          <li key={todo.id}>{todo.content}</li>
-        ))}
-      </ul>
-      <div>
-        🥳 App successfully hosted. Try creating a new todo.
-        <br />
-        <a href="https://docs.amplify.aws/react/start/quickstart/#make-frontend-updates">
-          Review next step of this tutorial.
-        </a>
+    <main style={{ maxWidth: '1200px', margin: '0 auto', padding: '20px' }}>
+      <div style={{
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        marginBottom: '30px',
+        borderBottom: '2px solid #eee',
+        paddingBottom: '20px'
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+          <h1 style={{ margin: 0 }}>💰 Bank Statement Analyzer</h1>
+          <ThemeToggle />
+        </div>
+        <div>
+          <span style={{ marginRight: '15px', color: '#666' }}>
+            {user?.signInDetails?.loginId}
+          </span>
+          <button
+            onClick={signOut}
+            style={{
+              padding: '8px 16px',
+              backgroundColor: '#dc3545',
+              color: 'white',
+              border: 'none',
+              borderRadius: '4px',
+              cursor: 'pointer'
+            }}
+          >
+            Sign out
+          </button>
+        </div>
       </div>
-      <button onClick={signOut}>Sign out</button>
+
+      <FileUpload />
     </main>
   );
 }

@@ -1,3 +1,22 @@
+## My Wrtie out
+The purpose of this project is to create an application before my interview with Wagetap, using their stack. 
+
+Time frame - one weekend
+
+### Goal
+I want to make a smart bills tracker that reads your bank account information and tells you where you are spending your money. 
+
+
+### The Stack
+AWS (AppSync & Amplify) 
+Javascript/Typescript 
+React
+
+
+
+
+
+
 ## AWS Amplify React+Vite Starter Template
 
 This repository provides a starter template for creating applications using React+Vite and AWS Amplify, emphasizing easy setup for authentication, API, and database capabilities.
