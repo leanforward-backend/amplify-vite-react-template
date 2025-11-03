@@ -1,0 +1,34 @@
+{
+  "style": {
+    "react": {
+      "componentSyntax": "arrow",
+      "exportStyle": "named-preferred",
+      "preferConst": true,
+      "jsxRuntime": "automatic"
+    },
+    "imports": {
+      "preferNamed": true,
+      "allowDefault": true
+    },
+    "functions": {
+      "preferArrowFunctions": true,
+      "allowFunctionDeclarations": true,
+      "hoistFunctionDeclarations": false
+    },
+    "naming": {
+      "componentCase": "PascalCase",
+      "hookCase": "camelCase"
+    }
+  },
+  "ai": {
+    "instructions": [
+      "Prefer using arrow function React components with const declarations (e.g., `export const Navbar = () => {}`) for reusable or shared components.",
+      "Use named exports by default for multiple components or utilities in a single file.",
+      "Use `export default function Component()` only when the file defines a single main component (such as `App`, `Layout`, or a Next.js page).",
+      "When using default function exports, include the component name for clearer stack traces (e.g., `export default function Navbar()` instead of an anonymous default).",
+      "Use concise arrow function syntax when possible, such as `const Component = () => <div />`.",
+      "Prefer PascalCase for React components and camelCase for hooks or utilities."
+    ]
+  }
+}
+
