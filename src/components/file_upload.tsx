@@ -3,6 +3,8 @@ import Papa from 'papaparse';
 import { PDFParse } from 'pdf-parse';
 import { useCallback, useState } from "react";
 import { useDropzone } from "react-dropzone";
+import { DataTable } from "./data_table";
+import { columns } from "./table_colums";
 
 
 PDFParse.setWorker('https://cdn.jsdelivr.net/npm/pdfjs-dist@5.4.296/build/pdf.worker.min.mjs');
@@ -14,7 +16,7 @@ interface Transaction {
     type: 'income' | 'expense';
 }
 
-export const PdfUpload = () => {
+export const FileUpload = () => {
     const [transactions, setTransactions] = useState<Transaction[]>([]);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
@@ -121,7 +123,7 @@ export const PdfUpload = () => {
         });
 
         const response = await openai.chat.completions.create({
-            model: "gpt-4o-mini",
+            model: "",
             messages: [
                 {
                     role: "user",
@@ -195,7 +197,7 @@ export const PdfUpload = () => {
 
     return (
         <div style={{ padding: '20px' }}>
-            <h2>Upload Bank Statement</h2>
+            <h2 className="text-2xl pb-4">Upload Bank Statement</h2>
 
             <div
                 {...getRootProps()}
@@ -250,101 +252,22 @@ export const PdfUpload = () => {
             )}
 
             {transactions.length > 0 && (
-                <div>
-                    <div style={{
-                        display: 'flex',
-                        justifyContent: 'space-between',
-                        alignItems: 'center',
-                        marginBottom: '20px'
-                    }}>
-                        <h3 style={{ margin: 0 }}>
+                <div className="mt-6">
+                    <div className="flex justify-between items-center mb-4">
+                        <h3 className="text-xl font-semibold">
                             Extracted Transactions ({transactions.length})
                         </h3>
-                        <span style={{ color: '#666', fontSize: '14px' }}>
+                        <span className="text-sm text-gray-600">
                             from {fileName}
                         </span>
                     </div>
+                    <DataTable columns={columns} data={transactions} />
 
-                    <div style={{ overflowX: 'auto' }}>
-                        <table style={{
-                            width: '100%',
-                            borderCollapse: 'collapse',
-                            boxShadow: '0 1px 3px rgba(0,0,0,0.1)'
-                        }}>
-                            <thead>
-                                <tr style={{ backgroundColor: '#f8f9fa' }}>
-                                    <th style={{
-                                        padding: '12px',
-                                        textAlign: 'left',
-                                        borderBottom: '2px solid #dee2e6',
-                                        fontWeight: '600'
-                                    }}>
-                                        Date
-                                    </th>
-                                    <th style={{
-                                        padding: '12px',
-                                        textAlign: 'left',
-                                        borderBottom: '2px solid #dee2e6',
-                                        fontWeight: '600'
-                                    }}>
-                                        Description
-                                    </th>
-                                    <th style={{
-                                        padding: '12px',
-                                        textAlign: 'right',
-                                        borderBottom: '2px solid #dee2e6',
-                                        fontWeight: '600'
-                                    }}>
-                                        Amount
-                                    </th>
-                                    <th style={{
-                                        padding: '12px',
-                                        textAlign: 'center',
-                                        borderBottom: '2px solid #dee2e6',
-                                        fontWeight: '600'
-                                    }}>
-                                        Type
-                                    </th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {transactions.map((t, i) => (
-                                    <tr
-                                        key={i}
-                                        style={{
-                                            borderBottom: '1px solid #dee2e6',
-                                            backgroundColor: i % 2 === 0 ? 'white' : '#f8f9fa'
-                                        }}
-                                    >
-                                        <td style={{ padding: '12px' }}>{t.date}</td>
-                                        <td style={{ padding: '12px' }}>{t.description}</td>
-                                        <td style={{
-                                            padding: '12px',
-                                            textAlign: 'right',
-                                            fontWeight: '600',
-                                            fontFamily: 'monospace'
-                                        }}>
-                                            ${typeof t.amount === 'number' ? t.amount.toFixed(2) : '0.00'}
-                                        </td>
-                                        <td style={{ padding: '12px', textAlign: 'center' }}>
-                                            <span style={{
-                                                padding: '4px 12px',
-                                                borderRadius: '12px',
-                                                fontSize: '12px',
-                                                fontWeight: '600',
-                                                backgroundColor: t.type === 'income' ? '#d4edda' : '#f8d7da',
-                                                color: t.type === 'income' ? '#155724' : '#721c24'
-                                            }}>
-                                                {t.type}
-                                            </span>
-                                        </td>
-                                    </tr>
-                                ))}
-                            </tbody>
-                        </table>
-                    </div>
+                    <h2 className="text-xl font-semibold mt-4">Total Income: {transactions.filter(t => t.type === 'income').reduce((acc, t) => acc + t.amount, 0).toLocaleString('en-AU', { style: 'currency', currency: 'AUD' })}</h2>
+                    <h2 className="text-xl font-semibold">Total Expenses: {transactions.filter(t => t.type === 'expense').reduce((acc, t) => acc + t.amount, 0).toLocaleString('en-AU', { style: 'currency', currency: 'AUD' })}</h2>
+                    <h1 className="text-2xl font-semibold mt-4">Net Balance: {transactions.map((t) => t.type === 'income' ? t.amount : -t.amount).reduce((acc, t) => acc + t, 0).toLocaleString('en-AU', { style: 'currency', currency: 'AUD' })}</h1>
                 </div>
             )}
         </div>
     );
-};
+}

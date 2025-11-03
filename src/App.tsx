@@ -2,7 +2,7 @@ import { useAuthenticator } from '@aws-amplify/ui-react';
 import { generateClient } from "aws-amplify/data";
 import { useEffect, useState } from "react";
 import type { Schema } from "../amplify/data/resource";
-import { PdfUpload } from "./components/pdf_upload";
+import { FileUpload } from './components/file_upload';
 
 const client = generateClient<Schema>();
 
@@ -52,7 +52,7 @@ function App() {
         </div>
       </div>
 
-      <PdfUpload />
+      <FileUpload />
     </main>
   );
 }
