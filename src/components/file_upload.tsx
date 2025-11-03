@@ -1,10 +1,10 @@
-import OpenAI from "openai";
+import { DataTable } from "@/components/data_table";
+import { columns } from "@/components/table_colums";
+import { DropZone } from "@/components/ui/dropzone";
 import Papa from 'papaparse';
 import { PDFParse } from 'pdf-parse';
 import { useState } from "react";
-import { DataTable } from "./data_table";
-import { columns } from "./table_colums";
-import { DropZone } from "./ui/dropzone";
+import { AiFileSummary } from "./ai_file_summary";
 
 
 PDFParse.setWorker('https://cdn.jsdelivr.net/npm/pdfjs-dist@5.4.296/build/pdf.worker.min.mjs');
@@ -107,53 +107,53 @@ export const FileUpload = () => {
     };
 
 
-    const processPdf = async (file: File): Promise<Transaction[]> => {
-        const arrayBuffer = await file.arrayBuffer();
-        const parser = new PDFParse({ data: new Uint8Array(arrayBuffer) });
-        const result = await parser.getText();
-        const pdfText = result.text;
+    // const processPdf = async (file: File): Promise<Transaction[]> => {
+    //     const arrayBuffer = await file.arrayBuffer();
+    //     const parser = new PDFParse({ data: new Uint8Array(arrayBuffer) });
+    //     const result = await parser.getText();
+    //     const pdfText = result.text;
 
-        if (!pdfText || pdfText.trim().length === 0) {
-            throw new Error('Could not extract text from PDF. The PDF might be image-based or encrypted.');
-        }
+    //     if (!pdfText || pdfText.trim().length === 0) {
+    //         throw new Error('Could not extract text from PDF. The PDF might be image-based or encrypted.');
+    //     }
 
-        const openai = new OpenAI({
-            apiKey: import.meta.env.VITE_OPENAI_API_KEY,
-            dangerouslyAllowBrowser: true // Only OK for testing!
-        });
+    //     const openai = new OpenAI({
+    //         apiKey: import.meta.env.VITE_OPENAI_API_KEY,
+    //         dangerouslyAllowBrowser: true // Only OK for testing!
+    //     });
 
-        const response = await openai.chat.completions.create({
-            model: "",
-            messages: [
-                {
-                    role: "user",
-                    content: `Extract all transactions from this bank statement text. 
-                Return ONLY a JSON array with this exact format:
-                [{"date": "YYYY-MM-DD", "description": "string", "amount": number, "type": "income" or "expense"}]
-                
-                Rules:
-                - Positive amounts or deposits are "income"
-                - Negative amounts or withdrawals are "expense"  
-                - Amount should always be positive number
-                - Return valid JSON only, no markdown or explanation
-                
-                Bank statement text:
-                ${pdfText}`
-                }
-            ],
-            max_tokens: 4096
-        });
+    //     const response = await openai.chat.completions.create({
+    //         model: "",
+    //         messages: [
+    //             {
+    //                 role: "user",
+    //                 content: `Extract all transactions from this bank statement text. 
+    //             Return ONLY a JSON array with this exact format:
+    //             [{"date": "YYYY-MM-DD", "description": "string", "amount": number, "type": "income" or "expense"}]
 
-        const content = response.choices[0].message.content;
+    //             Rules:
+    //             - Positive amounts or deposits are "income"
+    //             - Negative amounts or withdrawals are "expense"  
+    //             - Amount should always be positive number
+    //             - Return valid JSON only, no markdown or explanation
 
-        if (!content) {
-            throw new Error('No content returned from OpenAI. Please try again.');
-        }
+    //             Bank statement text:
+    //             ${pdfText}`
+    //             }
+    //         ],
+    //         max_tokens: 4096
+    //     });
 
-        const cleanedContent = content.replace(/```json\n?|\n?```/g, '');
-        const parsed = JSON.parse(cleanedContent) as Transaction[];
-        return parsed;
-    };
+    //     const content = response.choices[0].message.content;
+
+    //     if (!content) {
+    //         throw new Error('No content returned from OpenAI. Please try again.');
+    //     }
+
+    //     const cleanedContent = content.replace(/```json\n?|\n?```/g, '');
+    //     const parsed = JSON.parse(cleanedContent) as Transaction[];
+    //     return parsed;
+    // };
 
     const processFile = async (file: File) => {
         setLoading(true);
@@ -165,9 +165,11 @@ export const FileUpload = () => {
 
             if (file.type === 'text/csv' || file.name.endsWith('.csv')) {
                 extractedTransactions = await processCSV(file);
-            } else if (file.type === 'application/pdf' || file.name.endsWith('.pdf')) {
-                extractedTransactions = await processPdf(file);
-            } else {
+            }
+            // } else if (file.type === 'application/pdf' || file.name.endsWith('.pdf')) {
+            //     extractedTransactions = await processPdf(file);
+            // } 
+            else {
                 throw new Error('Unsupported file type. Please upload a PDF or CSV file.');
             }
 
@@ -231,6 +233,9 @@ export const FileUpload = () => {
                         </span>
                     </div>
                     <DataTable columns={columns} data={transactions} />
+
+
+                    <AiFileSummary transactions={transactions} fileName={fileName} />
 
                     <h2 className="text-xl font-semibold mt-4">Total Income: {transactions.filter(t => t.type === 'income').reduce((acc, t) => acc + t.amount, 0).toLocaleString('en-AU', { style: 'currency', currency: 'AUD' })}</h2>
                     <h2 className="text-xl font-semibold">Total Expenses: {transactions.filter(t => t.type === 'expense').reduce((acc, t) => acc + t.amount, 0).toLocaleString('en-AU', { style: 'currency', currency: 'AUD' })}</h2>
