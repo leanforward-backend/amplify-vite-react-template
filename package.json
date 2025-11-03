@@ -13,13 +13,16 @@
     "@aws-amplify/ui-react": "^6.5.5",
     "aws-amplify": "^6.6.6",
     "openai": "^6.7.0",
+    "papaparse": "^5.5.3",
     "pdf-parse": "^2.4.5",
     "react": "^18.2.0",
-    "react-dom": "^18.2.0"
+    "react-dom": "^18.2.0",
+    "react-dropzone": "^14.3.8"
   },
   "devDependencies": {
     "@aws-amplify/backend": "^1.5.0",
     "@aws-amplify/backend-cli": "^1.2.9",
+    "@types/papaparse": "^5.3.16",
     "@types/pdf-parse": "^1.1.5",
     "@types/react": "^18.2.66",
     "@types/react-dom": "^18.2.22",
